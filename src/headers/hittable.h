@@ -1,6 +1,6 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
-#include "../ray/ray.h"
+#include "ray.h"
 
 struct hit_record {
     point3 p;
