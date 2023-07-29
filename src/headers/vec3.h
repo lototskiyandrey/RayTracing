@@ -3,6 +3,9 @@
 
 #include <cmath>
 #include <iostream>
+#include <cstdlib>
+
+
 
 using std::sqrt;
 
@@ -43,6 +46,14 @@ class vec3 {
 
         double length_squared() const {
             return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+        }
+
+        inline static vec3 random() {
+            return vec3(rand() / (RAND_MAX + 1.0), rand() / (RAND_MAX + 1.0), rand() / (RAND_MAX + 1.0));
+        }
+
+        inline static vec3 random(double min, double max) {
+            return vec3(min + (max-min) * (rand() / (RAND_MAX + 1.0)), min + (max-min) * (rand() / (RAND_MAX + 1.0)), min + (max-min) * (rand() / (RAND_MAX + 1.0)));
         }
 
     public:
@@ -99,6 +110,30 @@ inline vec3 cross(const vec3 &u, const vec3 &v) {
 
 inline vec3 unit_vector(vec3 v) {
     return v / v.length();
+}
+
+inline vec3 random_in_unit_sphere() {
+    while(true) {
+        auto p = vec3::random(-1, 1);
+        if(p.length_squared() >= 1) {
+            continue;
+        }
+        return p;
+    }
+}
+
+vec3 random_unit_vector() {
+    return unit_vector(random_in_unit_sphere());
+}
+
+vec3 random_in_hemisphere(const vec3 &normal) {
+    vec3 in_unit_sphere = random_in_unit_sphere();
+    if(dot(in_unit_sphere, normal) > 0) {
+        return in_unit_sphere;
+    }
+    else {
+        return -in_unit_sphere;
+    }
 }
 
 #endif
