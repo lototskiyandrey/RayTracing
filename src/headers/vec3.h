@@ -153,4 +153,16 @@ vec3 refract(const vec3 &uv, const vec3 &n, double etai_over_etat) {
     return r_out_perp + r_out_parallel;
 }
 
+vec3 random_in_unit_disk() {
+    double min = -1;
+    double max = 1;
+    while(true) {
+        auto p = vec3((min + (max-min) * (rand() / (RAND_MAX + 1.0))),(min + (max-min) * (rand() / (RAND_MAX + 1.0))), 0);
+        if(p.length_squared() >= 1){
+            continue;
+        }
+        return p;
+    }
+}
+
 #endif
