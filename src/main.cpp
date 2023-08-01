@@ -30,7 +30,7 @@ int main(void){
 
     //Image
     const auto aspect_ratio = 3.0 / 2.0;
-    const int image_width = 500;
+    const int image_width = 1000;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
     const int samples_per_pixel = 500;
     const int max_depth = 50;
@@ -61,7 +61,7 @@ int main(void){
 
     //#pragma omp parallel for
     
-    /*
+    
     for(int j = image_height-1; j >= 0; --j){
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for(int i = 0; i < image_width; ++i){
@@ -78,17 +78,9 @@ int main(void){
         }
     }
     
-    #pragma omp critical
-        for(int j = image_height-1; j >= 0; --j){
-            std::cerr << "\rWriting Lines (remaining): " << j << ' ' << std::flush;
-            for(int i = 0; i < image_width; ++i){             
-                std::cout << std::get<0>(image[j][i]) << ' ' << std::get<1>(image[j][i]) << ' ' << std::get<2>(image[j][i]) << '\n';
-            }
-        }
-    */
 
 
-    renderImage(image, image_height, image_width, world, samples_per_pixel, cam, max_depth);
+    //renderImage(image, image_height, image_width, world, samples_per_pixel, cam, max_depth);
 
 
 
@@ -106,8 +98,10 @@ int main(void){
 }
 
 
-void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, const int image_height, const int image_width, hittable_list world, int samples_per_pixel, camera cam, int max_depth) {
-    #pragma omp parallel for
+void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, const int image_height, const int image_width, hittable_list world, int samples_per_pixel, camera cam, int max_depth) {  
+    #pragma omp parallel 
+    {
+    #pragma omp for
     for(int j = image_height-1; j >= 0; --j){
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for(int i = 0; i < image_width; ++i){
@@ -120,9 +114,30 @@ void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, con
             }
             //#pragma omp critical
                 //write_color(std::cout, pixel_color, samples_per_pixel);
-            image = write_color_to_array(pixel_color, samples_per_pixel, image, i, j);
+            //image = write_color_to_array(pixel_color, samples_per_pixel, image, i, j);
+
+            // Do without the function call:
+
+            std::tuple<int, int ,int> pixel;
+
+            auto r = pixel_color.x();
+            auto g = pixel_color.y();
+            auto b = pixel_color.z();
+
+            // Divide the color by the number fo samples and gamma correct for gamma=2.0
+            auto scale = 1.0 / samples_per_pixel;
+            r = sqrt(scale * r);
+            g = sqrt(scale * g);
+            b = sqrt(scale * b);
+
+            pixel = std::make_tuple( static_cast<int>(256 * clamp(r, 0.0, 0.999)), static_cast<int>(256 * clamp(g, 0.0, 0.999)), static_cast<int>(256 * clamp(b, 0.0, 0.999)) );
+
+            image[j][i] = pixel;
+
+            // --------------------------------
         }
-    }    
+    }  
+    } 
 }
 
 
