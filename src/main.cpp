@@ -8,14 +8,18 @@
 #include "./headers/sphere.h"
 #include "./headers/camera.h"
 #include "./headers/material.h"
+#include "./headers/aarect.h"
 
+//#include <corecrt_math.h>
 #include <iostream>
 #include <memory>
 
 
-color ray_color(const ray &r, const hittable &world, int depth);
+color ray_color(const ray &r, const color &background, const hittable &world, int depth);
 
 hittable_list random_scene();
+
+hittable_list texture_scene();
 
 int main(void){
 
@@ -23,17 +27,18 @@ int main(void){
     const auto aspect_ratio = 3.0 / 2.0;
     const int image_width = 1200;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 500;
+    const int samples_per_pixel = 100;
     const int max_depth = 50;
 
     //World
 
-    auto world = random_scene();
+    auto world = texture_scene();
+    color background(0.00,0.00,0.00);
 
     // Camera
 
-    point3 lookfrom(13, 2, 3);
-    point3 lookat(0, 0, 0);
+    point3 lookfrom(0, 0.7, 20);
+    point3 lookat(0, 0, 1);
     vec3 vup(0, 1, 0);
     auto dist_to_focus = 10.0;
     double aperture = 0.1;
@@ -52,7 +57,7 @@ int main(void){
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j +  random_double()) / (image_height -1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, max_depth);
+                pixel_color += ray_color(r, background, world, max_depth);
             }
             write_color(std::cout, pixel_color, samples_per_pixel);
         }
@@ -64,25 +69,52 @@ int main(void){
 }
 
 
-color ray_color(const ray &r, const hittable &world, int depth) {
+color ray_color(const ray &r, const color &background, const hittable &world, int depth) {
     hit_record rec;
 
     if(depth <= 0) {
         return color(0,0,0);
     }
 
-    if(world.hit(r, 0.001, infinity, rec)) {
-        ray scattered;
-        color attenuation;
-        if(rec.mat_ptr->scatter(r, rec, attenuation, scattered)){
-            return attenuation * ray_color(scattered, world, depth-1);
-        }
-        return color(0,0,0);
+    if(!world.hit(r, 0.001, INFINITY, rec)) {
+        return background;
     }
-    vec3 unit_direction = unit_vector(r.direction());
-    auto t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0-t) * color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
+
+    ray scattered;
+    color attenuation;
+    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+    if(!rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+        return emitted;
+    }
+
+    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
 }
+
+
+
+hittable_list texture_scene() {
+    hittable_list world;
+
+
+    auto ground_material = make_shared<lambertian>(color(0.5, 0.5 ,0.5));
+    auto diff_light = make_shared<diffuse_light>(color(3.0, 3.0, 3.0));
+    
+
+    //world.add(make_shared<rect_xy>(0, 0, 10, 5, 2, diff_light));
+    world.add(make_shared<rect_xz>(-3, 3, -0.5, 4, -2.5, diff_light));
+    //world.add(make_shared<rect_xz>(0, 555, 0, 555, 555, ground_material));
+
+    auto blue = make_shared<lambertian>(color(24.0/255, 153.0/255, 240.0/255));
+
+    world.add(make_shared<rect_xz>(-3, 3, 1, 4, 2.7, blue));
+
+    return world;    
+}
+
+
+
+
 
 hittable_list random_scene() {
     hittable_list world;
