@@ -57,16 +57,11 @@ int main(void){
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
     // --------------------------------------------------------------------
-    //omp_set_dynamic(0);
-    //omp_set_num_threads(THREAD_NUM);
 
     std::vector<std::vector<std::tuple<int, int, int>>> image(image_height, std::vector<std::tuple<int, int, int>>(image_width));
     
-    omp_set_num_threads(4);
 
     renderImage(image, image_height, image_width, world, samples_per_pixel, cam, max_depth, background);
-
-
 
     generate_image(image, image_height, image_width);
     
@@ -83,7 +78,6 @@ int main(void){
 
 
 void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, const int image_height, const int image_width, hittable_list world, int samples_per_pixel, camera cam, int max_depth, color background) {  
-    //omp_set_num_threads(4);
     #pragma omp parallel 
     {
     #pragma omp for
@@ -98,10 +92,6 @@ void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, con
                 pixel_color += ray_color(r, background, world, max_depth);
             }
             //#pragma omp critical
-                //write_color(std::cout, pixel_color, samples_per_pixel);
-            //image = write_color_to_array(pixel_color, samples_per_pixel, image, i, j);
-
-            // Do without the function call:
 
             std::tuple<int, int ,int> pixel;
 
