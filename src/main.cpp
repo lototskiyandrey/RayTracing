@@ -26,7 +26,7 @@ void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, con
 color ray_color(const ray &r, const color &background, const hittable &world, int depth);
 
 
-hittable_list texture_scene();
+hittable_list final_scene();
 
 int main(void){
 
@@ -34,23 +34,23 @@ int main(void){
     const auto aspect_ratio = 3.0 / 2.0;
     const int image_width = 1000;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 100;
+    const int samples_per_pixel = 500;
     const int max_depth = 50;
 
     //World
 
-    auto world = texture_scene();
-    color background(0.00,0.00,0.00);
+    auto world = final_scene();
+    color background(0.0,0.0,0.0);
 
     // Camera
 
-    point3 lookfrom(0, 0.7, 20);
-    point3 lookat(0, 0, 1);
+    point3 lookfrom(0, 0, 22);
+    point3 lookat(0, 0.5, 1);
     vec3 vup(0, 1, 0);
     auto dist_to_focus = 10.0;
-    double aperture = 0.1;
+    double aperture = 0.01;
 
-    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+    camera cam(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture, dist_to_focus);
 
     //Render
 
@@ -62,6 +62,8 @@ int main(void){
 
     std::vector<std::vector<std::tuple<int, int, int>>> image(image_height, std::vector<std::tuple<int, int, int>>(image_width));
     
+    omp_set_num_threads(4);
+
     renderImage(image, image_height, image_width, world, samples_per_pixel, cam, max_depth, background);
 
 
@@ -81,6 +83,7 @@ int main(void){
 
 
 void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, const int image_height, const int image_width, hittable_list world, int samples_per_pixel, camera cam, int max_depth, color background) {  
+    //omp_set_num_threads(4);
     #pragma omp parallel 
     {
     #pragma omp for
@@ -157,21 +160,47 @@ color ray_color(const ray &r, const color &background, const hittable &world, in
 
 
 
-hittable_list texture_scene() {
+hittable_list final_scene() {
     hittable_list world;
 
 
     auto ground_material = make_shared<lambertian>(color(0.5, 0.5 ,0.5));
-    auto diff_light = make_shared<diffuse_light>(color(3.0, 3.0, 3.0));
+    auto diff_light_blue = make_shared<diffuse_light>(color(46.0/40, 147.0/40, 255.0/40));
+    auto diff_light_red = make_shared<diffuse_light>(color(255.0/40, 81.0/40, 46.0/40));
     
 
     //world.add(make_shared<rect_xy>(0, 0, 10, 5, 2, diff_light));
-    world.add(make_shared<rect_xz>(-3, 3, -0.5, 4, -2.5, diff_light));
+    world.add(make_shared<rect_xz>(0, 2, 0.5, 3, -2.8, diff_light_blue));
+    world.add(make_shared<rect_xz>(-2, 0, 0.5, 3, -2.8, diff_light_red));
     //world.add(make_shared<rect_xz>(0, 555, 0, 555, 555, ground_material));
 
-    auto blue = make_shared<lambertian>(color(24.0/255, 153.0/255, 240.0/255));
+    auto cyan = make_shared<lambertian>(color(52.0/255, 235.0/255, 213.0/255));
+    world.add(make_shared<sphere>(point3(4, 2.505,3), 0.5, cyan));
 
-    world.add(make_shared<rect_xz>(-3, 3, 1, 4, 2.7, blue));
+    auto glass = make_shared<dielectric>(1.3);
+    world.add(make_shared<sphere>(point3(-1.2, 1.8, 0.7), 0.7, glass));
+
+    auto orange = make_shared<metal>(color(245.0/255, 148.0/255, 2.0/255), 0.1);
+    world.add(make_shared<sphere>(point3(-3.4, 1.8, 4), 1, orange));
+
+    auto purple = make_shared<lambertian>(color(146/255.0, 45.0/255.0, 247.0/255.0));
+    world.add(make_shared<rect_xz>(-2, 2, -2, 4, 2.8, purple));
+
+    auto light_bulb = make_shared<diffuse_light>(color(250.0/255, 252.0/255, 202.0/255));
+    world.add(make_shared<sphere>(point3(2.0, 1.5, 0.7), 0.3, light_bulb));
+
+    auto green = make_shared<lambertian>(color(26.0/255, 176.0/255, 41.0/255));
+    world.add(make_shared<sphere>(point3(-2.3, -0.3, 1.7), 1.2, green));
+    
+    auto pink = make_shared<metal>(color(189.0/255, 0, 151.0/255), 1);
+    world.add(make_shared<sphere>(point3(2.4, 2.6,5.3), 0.3, pink));
+
+    auto blue = make_shared<metal>(color(12.0/255, 36.0/255, 196.0/255), 0.5);
+    world.add(make_shared<rect_xy>(-2, 2, -3, 1.5, -1.5, blue));
+
+
+    world.add(make_shared<rect_xz>(-5, 5, -2, 7, 3.05, ground_material));
+
 
     return world;    
 }
