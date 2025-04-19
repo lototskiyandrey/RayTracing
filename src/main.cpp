@@ -11,8 +11,8 @@
 #include "./headers/aarect.h"
 
 #include <iostream>
-#include <memory>
 #include <omp.h>
+#include <chrono>
 
 
 
@@ -54,6 +54,9 @@ int main(void){
 
     //Render
 
+    // Keep track of the time
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
     // --------------------------------------------------------------------
@@ -69,8 +72,10 @@ int main(void){
 
     std::cerr << "\nDone\n" << std::flush;
 
-    
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 
+    std::cerr << "Time taken to render: " << duration.count() << " milliseconds." << std::endl;
     // --------------------------------------------------------------------
 
     return 0;
@@ -78,9 +83,6 @@ int main(void){
 
 
 void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, const int image_height, const int image_width, hittable_list world, int samples_per_pixel, camera cam, int max_depth, color background) {  
-    #pragma omp parallel 
-    {
-    #pragma omp for
     for(int j = image_height-1; j >= 0; --j){
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for(int i = 0; i < image_width; ++i){
@@ -112,7 +114,6 @@ void renderImage(std::vector<std::vector<std::tuple<int, int, int>>> &image, con
             // --------------------------------
         }
     }  
-    } 
 }
 
 
