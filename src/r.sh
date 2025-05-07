@@ -1,4 +1,4 @@
 #!/bin/bash
 
-g++ main.cpp -Ofast
-./a.out > img1.ppm
+g++ main.cpp -Ofast -std=c++0x -pthread
+./a.out > img2.ppm
