@@ -1,6 +1,8 @@
 #ifndef INTERVAL_H
 #define INTERVAL_H
 
+#include <cmath>
+
 class interval 
 {
     public:
@@ -37,11 +39,26 @@ class interval
             return x;
         }
 
+        interval create_empty()
+        {
+            return interval(+infinity, -infinity);
+        }
+
+        interval create_universe()
+        {
+            return interval(-infinity, +infinity);
+        }
+
         static const interval empty, universe;
+
+    private:
+        // Useful Constants
+        const double infinity = std::numeric_limits<double>::infinity();
+        const double pi = 3.1415926535897932385;
         
 };
 
-const interval interval::empty = interval(+infinity, -infinity);
-const interval interval::universe = interval(-infinity, +infinity);
+const interval interval::empty = interval().create_empty();
+const interval interval::universe = interval().create_universe();
 
 #endif
