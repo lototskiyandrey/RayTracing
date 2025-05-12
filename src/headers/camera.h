@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "hittable.h"
+#include "vec3.h"
 
 class camera 
 {
@@ -76,6 +77,7 @@ class camera
 
             if(world.hit(r, interval(0, infinity), rec))
             {
+                // vec3 direction = random_on_hemisphere(rec.normal);
                 return 0.5 * (rec.normal + color(1,1,1));
             }
             vec3 unit_direction = unit_vector(r.direction());
