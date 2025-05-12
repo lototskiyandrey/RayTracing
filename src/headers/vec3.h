@@ -2,8 +2,7 @@
 #define VEC3_H
 
 // #include "rtweekend.h"
-#include <cmath>
-#include <iostream>
+#include "useful_functions.h"
 
 class vec3 
 {
