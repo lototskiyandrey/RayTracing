@@ -14,7 +14,7 @@ class interval
         interval(const interval &a, const interval &b)
         {
             min = a.min <= b.min ? a.min : b.min;
-            max = a.max <= b.max ? a.max : b.max;
+            max = a.max >= b.max ? a.max : b.max;
         }
 
         double size() const 
