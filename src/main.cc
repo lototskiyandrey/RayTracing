@@ -18,21 +18,44 @@ void cornell_box();
 void cornell_smoke();
 void final_scene(int image_wdith, int samples_per_pixel, int max_depth);
 
+#include <iomanip>
+#include <iostream>
+
 int main(void)
 {
-    switch(10) 
+    // switch(10) 
+    // {
+    //     case 1: bouncing_spheres(); break;
+    //     case 2: checkered_spheres(); break;
+    //     case 3: earth(); break;
+    //     case 4: perlin_spheres(); break;
+    //     case 5: quads(); break;
+    //     case 6: simple_light(); break;
+    //     case 7: cornell_box(); break;
+    //     case 8: cornell_smoke(); break;
+    //     case 9: final_scene(400, 250, 4); break;
+    //     case 10: final_scene(800, 10000, 40); break;
+    // }
+
+    std::cout << std::fixed << std::setprecision(12);
+
+    int inside_circle = 0;
+    int N = 100000;
+
+    for(int i = 0; i < N; i++)
     {
-        case 1: bouncing_spheres(); break;
-        case 2: checkered_spheres(); break;
-        case 3: earth(); break;
-        case 4: perlin_spheres(); break;
-        case 5: quads(); break;
-        case 6: simple_light(); break;
-        case 7: cornell_box(); break;
-        case 8: cornell_smoke(); break;
-        case 9: final_scene(400, 250, 4); break;
-        case 10: final_scene(800, 10000, 40); break;
+        auto x = random_double(-1, 1);
+        auto y = random_double(-1, 1);
+
+        if(x * x + y * y < 1)
+        {
+            inside_circle++;
+        }
     }
+
+    std::cout << "Estimate of Pi = " << (4.0 * inside_circle) / N << '\n';
+
+
     return 0;
 }
 
@@ -116,7 +139,8 @@ void final_scene(int image_width, int samples_per_pixel, int max_depth)
     cam.render(world);
 }
 
-void cornell_smoke() {
+void cornell_smoke() 
+{
     hittable_list world;
 
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
@@ -160,7 +184,8 @@ void cornell_smoke() {
     cam.render(world);
 }
 
-void cornell_box() {
+void cornell_box() 
+{
     hittable_list world;
 
     auto red   = make_shared<lambertian>(color(.65, .05, .05));
@@ -269,7 +294,8 @@ void quads()
     cam.render(world);
 }
 
-void perlin_spheres() {
+void perlin_spheres() 
+{
     hittable_list world;
 
     auto pertext = make_shared<noise_texture>(4);
