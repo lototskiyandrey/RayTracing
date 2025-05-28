@@ -19,6 +19,11 @@ class material
         {
             return false;
         }
+
+        virtual double scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const 
+        {
+            return 0;
+        }
 };
 
 class lambertian : public material 
@@ -41,9 +46,15 @@ class lambertian : public material
             return true;
         }
 
+        double scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const override 
+        {
+            auto cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
+            return cos_theta < 0 ? 0 : cos_theta / pi;
+        }
+
     private:
         shared_ptr<texture> tex;
-        color albedo;
+        // color albedo;
 };
 
 class metal : public material 
