@@ -3,8 +3,8 @@
 
 #include "hittable.h"
 #include "vec3.h"
-#include "pdf.h"
 #include "texture.h"
+#include "pdf.h"
 
 class scatter_record 
 {

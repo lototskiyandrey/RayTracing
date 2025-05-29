@@ -3,7 +3,7 @@
 
 #include "onb.h"
 #include "vec3.h"
-#include "hittable_list.h"
+#include "hittable.h"
 
 class pdf 
 {

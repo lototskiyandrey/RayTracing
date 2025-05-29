@@ -82,7 +82,7 @@ class sphere : public hittable
             return 1 / solid_angle;
         }
 
-        vec3 random(const point3 &origin)
+        vec3 random(const point3 &origin) const override
         {
             vec3 direction = center.at(0) - origin;
             auto distance_squared = direction.length_squared();
@@ -116,7 +116,7 @@ class sphere : public hittable
 
             auto phi = 2 * pi * r1;
             auto x = std::cos(phi) * std::sqrt(1-z*z);
-            auto y = std::sin(phi) * std::sqrt(1 - z * z);
+            auto y = std::sin(phi) * std::sqrt(1 - z*z);
 
             return vec3(x, y, z);
         }
