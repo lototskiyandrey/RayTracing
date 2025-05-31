@@ -2,7 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <bits/stdc++.h>
-
+#include "headers/useful_functions.h"
 
 void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf_g, std::vector<double> &cmf_b) ;
 
@@ -10,6 +10,7 @@ int longest_wavelength = 830;
 int shortest_wavelength = 390;
 
 double clamp(double a, double b, double c);
+double gaussian(int mean, int variance, int at);
 
 int main() 
 {   
@@ -173,4 +174,17 @@ double clamp(double a, double b, double c)
         return c;
     }
     return a;
+}
+
+void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, int variance)
+{
+    for(int i = 0; i < spectrum.size(); i++)
+    {
+        spectrum.at(i) = gaussian(mean, variance, i+shortest_wavelength);
+    }
+}
+
+double gaussian(int mean, int variance, int at)
+{
+    return (1 / std::sqrt(2 * pi * variance * variance)) * std::pow(e, ((-(at-mean) * (at-mean)) / (2 * variance * variance)));
 }
