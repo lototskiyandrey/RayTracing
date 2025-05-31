@@ -4,7 +4,9 @@
 #include <bits/stdc++.h>
 #include "headers/useful_functions.h"
 
-void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf_g, std::vector<double> &cmf_b) ;
+void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf_g, std::vector<double> &cmf_b);
+void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, int variance);
+void write_color(std::ostream &out, std::vector<double> spectrum, std::vector<double> cmf_r, std::vector<double> cmf_g, std::vector<double> cmf_b);
 
 int longest_wavelength = 830;
 int shortest_wavelength = 390;
@@ -14,30 +16,6 @@ double gaussian(int mean, int variance, int at);
 
 int main() 
 {   
-
-    // int image_width = 500;
-    // int image_height = 500;
-
-    // std::cout << "P3\n " << image_width << " " << image_height << "\n255\n";
-
-    // for(int j = 0; j < image_height; j++)
-    // {
-    //     std::clog << "\rScanlines remaining: " << image_height - j << ' ' << std::flush;
-    //     for(int i = 0; i < image_width; i++)
-    //     {
-    //         auto r = (double)i / image_width;
-    //         auto g = (double)j / image_height;
-    //         auto b = 0;
-
-    //         auto ir = int(r * 255);
-    //         auto ig = int(g * 255);
-    //         auto ib = int(b * 255);
-
-    //         std::cout << ir << ' ' << ig << ' ' << ib << std::endl;
-    //     }
-    // }
-
-    // std::clog << "\rDone.                             \n";
 
     int spectrum_length = longest_wavelength - shortest_wavelength + 1;
 
@@ -51,10 +29,27 @@ int main()
 
     load_and_populate_cmfs(cmf_r, cmf_g, cmf_b);
 
-    for(auto r : cmf_r)
+    // generate_spectrum_gaussian(spectrum, 510, 30);
+
+
+    int image_width = 500;
+    int image_height = 500;
+
+    std::cout << "P3\n " << image_width << " " << image_height << "\n255\n";
+
+    for(int j = 0; j < image_height; j++)
     {
-        std::cout << r << "\n";
+        std::clog << "\rScanlines remaining: " << image_height - j << ' ' << std::flush;
+        for(int i = 0; i < image_width; i++)
+        {
+            generate_spectrum_gaussian(spectrum, j/1.5+380, 50);
+            write_color(std::cout, spectrum, cmf_r, cmf_g, cmf_b);
+        }
     }
+
+    std::clog << "\rDone.                             \n";
+
+
     
 
     return 0;
