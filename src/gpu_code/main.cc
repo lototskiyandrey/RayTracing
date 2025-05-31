@@ -9,6 +9,8 @@ void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf
 int longest_wavelength = 830;
 int shortest_wavelength = 390;
 
+double clamp(double a, double b, double c);
+
 int main() 
 {   
 
@@ -116,7 +118,59 @@ void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf
 }
 
 
-void write_color(std::ostream &out, std::vector<double> spectrum)
+double integrate_spectrum_cmf(std::vector<double> spectrum, std::vector<double> cmf)
 {
+    double tri_stim = 0.0;
 
+    for(int i = 0; i < spectrum.size(); i++) 
+    {
+        tri_stim += spectrum.at(i) * cmf.at(i);
+    }
+
+    return tri_stim;
+}
+
+
+void write_color(std::ostream &out, std::vector<double> spectrum, std::vector<double> cmf_r, std::vector<double> cmf_g, std::vector<double> cmf_b)
+{   
+    // tristimulus values
+    double X = integrate_spectrum_cmf(spectrum, cmf_r);
+    double Y = integrate_spectrum_cmf(spectrum, cmf_g);
+    double Z = integrate_spectrum_cmf(spectrum, cmf_b);
+
+    // linear RGB
+    double r_lin = (3.2406 * X) + (-1.5372 * Y) + (-0.4986 * Z);
+    double g_lin = (-0.9689 * X) + (1.8758 * Y) + (0.0415 * Z);
+    double b_lin = (0.0557 * X) + (-0.2040 * Y) + (1.0570 * Z);
+
+    // Gamma correction
+    double r_lin_corrected = r_lin <= 0.0031308 ? (12.92 * r_lin) : (1.055 * std::pow(r_lin, 1.0/2.4) - 0.055);
+    double g_lin_corrected = g_lin <= 0.0031308 ? (12.92 * g_lin) : (1.055 * std::pow(g_lin, 1.0/2.4) - 0.055);
+    double b_lin_corrected = b_lin <= 0.0031308 ? (12.92 * b_lin) : (1.055 * std::pow(b_lin, 1.0/2.4) - 0.055);
+
+    // Clamping to [0,1]
+    double r_clamped = clamp(r_lin_corrected, 0.0, 1.0);
+    double g_clamped = clamp(g_lin_corrected, 0.0, 1.0);
+    double b_clamped = clamp(b_lin_corrected, 0.0, 1.0);
+
+    // Set to values between 0 and 255.
+    int r_byte = int(255 * r_clamped);
+    int g_byte = int(255 * g_clamped);
+    int b_byte = int(255 * b_clamped);
+
+    // Print out
+    out << r_byte << ' ' << g_byte << ' ' << b_byte << '\n';
+}
+
+double clamp(double a, double b, double c) 
+{
+    if(a < b)
+    {
+        return b;
+    }
+    if(a > c)
+    {
+        return c;
+    }
+    return a;
 }
