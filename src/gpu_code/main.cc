@@ -1,49 +1,29 @@
-#include <iostream>
-#include <vector>
-#include <fstream>
 #include <bits/stdc++.h>
 #include "headers/useful_functions.h"
+#include "headers/vec3.h"
 
-void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf_g, std::vector<double> &cmf_b);
-void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, int variance);
-void write_color(std::ostream &out, std::vector<double> spectrum, std::vector<double> cmf_r, std::vector<double> cmf_g, std::vector<double> cmf_b);
-
-int longest_wavelength = 830;
-int shortest_wavelength = 390;
-
-double clamp(double a, double b, double c);
-double gaussian(int mean, int variance, int at);
+void write_color(std::ostream &out, std::vector<double> spectrum);
 
 int main() 
 {   
-
-    int spectrum_length = longest_wavelength - shortest_wavelength + 1;
-
-    std::vector<double> spectrum(spectrum_length);
-
-    std::vector<double> cmf_r(spectrum_length);
-    std::vector<double> cmf_g(spectrum_length);
-    std::vector<double> cmf_b(spectrum_length);
-
-
-
-    load_and_populate_cmfs(cmf_r, cmf_g, cmf_b);
-
-    // generate_spectrum_gaussian(spectrum, 510, 30);
-
-
-    int image_width = 500;
+    // Image
+    int image_width = 700;
     int image_height = 500;
+
+    // Camera
+
 
     std::cout << "P3\n " << image_width << " " << image_height << "\n255\n";
 
+    std::vector<double> spectrum(spectrum_length);
+    load_and_populate_cmfs(cmf_r, cmf_g, cmf_b);
     for(int j = 0; j < image_height; j++)
     {
         std::clog << "\rScanlines remaining: " << image_height - j << ' ' << std::flush;
         for(int i = 0; i < image_width; i++)
         {
-            generate_spectrum_gaussian(spectrum, j/1.5+380, 50);
-            write_color(std::cout, spectrum, cmf_r, cmf_g, cmf_b);
+            generate_spectrum_gaussian(spectrum, j/1.5+380, 100);
+            write_color(std::cout, spectrum);
         }
     }
 
@@ -62,72 +42,9 @@ a particular wavelength of visible light
 
 */
 
-void load_and_populate_cmfs(std::vector<double> &cmf_r, std::vector<double> &cmf_g, std::vector<double> &cmf_b) 
-{
-    std::ifstream f("cmf.csv");
-
-    if(!f.is_open())
-    {
-        std::cerr << "Error opening file!";
-        exit(-1);
-    }
-
-    std::string s;
 
 
-    while(std::getline(f, s))
-    {   
-        int row_num = 0;
-        std::string elems[4];
-
-        std::string delimiter = ",";
-
-        auto pos = s.find(delimiter);
-
-        while(pos != std::string::npos)
-        {
-            elems[row_num] = s.substr(0, pos);
-
-            s.erase(0, pos + delimiter.length());
-
-            pos = s.find(delimiter);
-
-            row_num++;
-        }
-
-        elems[row_num] = s;
-
-
-        int wavelength = std::stoi(elems[0]);
-        int index = wavelength - shortest_wavelength;
-
-        double red_val = std::stod(elems[1]);
-        double green_val = std::stod(elems[2]);
-        double blue_val = std::stod(elems[3]);
-        
-        cmf_r.at(index) = red_val;
-        cmf_g.at(index) = green_val;
-        cmf_b.at(index) = blue_val;
-    }
-
-    f.close();
-}
-
-
-double integrate_spectrum_cmf(std::vector<double> spectrum, std::vector<double> cmf)
-{
-    double tri_stim = 0.0;
-
-    for(int i = 0; i < spectrum.size(); i++) 
-    {
-        tri_stim += spectrum.at(i) * cmf.at(i);
-    }
-
-    return tri_stim;
-}
-
-
-void write_color(std::ostream &out, std::vector<double> spectrum, std::vector<double> cmf_r, std::vector<double> cmf_g, std::vector<double> cmf_b)
+void write_color(std::ostream &out, std::vector<double> spectrum)
 {   
     // tristimulus values
     double X = integrate_spectrum_cmf(spectrum, cmf_r);
@@ -158,28 +75,5 @@ void write_color(std::ostream &out, std::vector<double> spectrum, std::vector<do
     out << r_byte << ' ' << g_byte << ' ' << b_byte << '\n';
 }
 
-double clamp(double a, double b, double c) 
-{
-    if(a < b)
-    {
-        return b;
-    }
-    if(a > c)
-    {
-        return c;
-    }
-    return a;
-}
 
-void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, int variance)
-{
-    for(int i = 0; i < spectrum.size(); i++)
-    {
-        spectrum.at(i) = gaussian(mean, variance, i+shortest_wavelength);
-    }
-}
 
-double gaussian(int mean, int variance, int at)
-{
-    return (1 / std::sqrt(2 * pi * variance * variance)) * std::pow(e, ((-(at-mean) * (at-mean)) / (2 * variance * variance)));
-}
