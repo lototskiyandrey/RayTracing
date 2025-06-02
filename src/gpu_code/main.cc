@@ -76,8 +76,13 @@ void generate_spectrum(std::vector<double> &spectrum, const ray r)
     // std::cerr << a << std::endl;
     
     // generate_spectrum_gaussian(spectrum, ((double)spectrum_length/2 + shortest_wavelength)*a, 5);
-    generate_spectrum_gaussian(spectrum, ((double)spectrum_length/3 + shortest_wavelength)*(1+a/2), 1);
+    generate_spectrum_gaussian(spectrum, ((double)spectrum_length/2.7 + shortest_wavelength)*(1+a/3.7), 1);
+
+    // Flatten Spectrum
+
+    flatten_spectrum(spectrum, 0.5);
 }
+
 
 
 

@@ -7,6 +7,9 @@
 #include <memory>
 #include <vector>
 #include <fstream>
+// #include <bits/stdc++.h>
+#include <algorithm>
+#include <functional>
 
 // Namespaces
 using std::make_shared;
@@ -134,6 +137,11 @@ inline void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, 
     {
         spectrum.at(i) = gaussian(mean, variance, i+shortest_wavelength);
     }
+}
+
+inline void flatten_spectrum(std::vector<double> &spectrum, double factor)
+{
+    std::transform(spectrum.begin(), spectrum.end(), spectrum.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, factor));
 }
 
 #endif
