@@ -1,8 +1,11 @@
 #include <bits/stdc++.h>
 #include "headers/useful_functions.h"
 #include "headers/vec3.h"
+#include "headers/ray.h"
 
 void write_color(std::ostream &out, std::vector<double> spectrum);
+
+void generate_spectrum(std::vector<double> &spectrum, const ray r);
 
 int main() 
 {   
@@ -11,18 +14,41 @@ int main()
     int image_height = 500;
 
     // Camera
+    auto focal_length = 1.0;
+    auto viewport_height = 2.0;
+    auto viewport_width = viewport_height * (double(image_width)/image_height);
+    auto camera_center = vec3(0, 0, 0);
 
+    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    auto viewport_u = vec3(viewport_width, 0, 0);
+    auto viewport_v = vec3(0, -viewport_height, 0);
 
-    std::cout << "P3\n " << image_width << " " << image_height << "\n255\n";
+    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    auto pixel_delta_u = viewport_u / image_width;
+    auto pixel_delta_v = viewport_v / image_height;
+
+    // Calculate the location of the upper left pixel.
+    auto viewport_upper_left = camera_center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+    auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
 
     std::vector<double> spectrum(spectrum_length);
     load_and_populate_cmfs(cmf_r, cmf_g, cmf_b);
+
+    std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
+
     for(int j = 0; j < image_height; j++)
     {
         std::clog << "\rScanlines remaining: " << image_height - j << ' ' << std::flush;
         for(int i = 0; i < image_width; i++)
-        {
-            generate_spectrum_gaussian(spectrum, j/1.5+380, 100);
+        {   
+
+            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
+            auto ray_direction = pixel_center - camera_center;
+            ray r(camera_center, ray_direction);
+
+            generate_spectrum(spectrum, r);
+
             write_color(std::cout, spectrum);
         }
     }
@@ -41,6 +67,17 @@ Implmenting a more realistic color system. Every ray is now an array where each 
 a particular wavelength of visible light
 
 */
+
+
+void generate_spectrum(std::vector<double> &spectrum, const ray r)
+{
+    auto a = r.dir().y();
+
+    // std::cerr << a << std::endl;
+    
+    // generate_spectrum_gaussian(spectrum, ((double)spectrum_length/2 + shortest_wavelength)*a, 5);
+    generate_spectrum_gaussian(spectrum, ((double)spectrum_length/3 + shortest_wavelength)*(1+a/2), 1);
+}
 
 
 

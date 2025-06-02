@@ -5,7 +5,7 @@ class ray
 {
     public:
         ray() {}
-        ray(const vec3 orig, const vec3 dir) : origin(orig), direction(dir) {}
+        ray(const vec3 &orig, const vec3 &dir) : origin(orig), direction(dir) {}
 
         const vec3 orig() const {return origin;}
         const vec3 dir() const {return direction;}
@@ -14,6 +14,7 @@ class ray
         {
             return origin + direction * t;
         }
+
 
     private:
         vec3 origin;
