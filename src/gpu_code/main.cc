@@ -6,6 +6,7 @@
 void write_color(std::ostream &out, std::vector<double> spectrum);
 
 void generate_spectrum_background(std::vector<double> &spectrum, const ray r);
+bool hit_sphere(vec3 center, double radius, ray r);
 
 int main() 
 {   
@@ -47,7 +48,14 @@ int main()
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
 
-            generate_spectrum_background(spectrum, r);
+            if(hit_sphere(vec3(0,0,-1.5), 0.5, r))
+            {
+                generate_spectrum_gaussian(spectrum, 680, 30);
+            }
+            else  
+            {
+                generate_spectrum_background(spectrum, r);
+            }
 
             write_color(std::cout, spectrum);
         }
@@ -85,9 +93,15 @@ void generate_spectrum_background(std::vector<double> &spectrum, const ray r)
 }
 
 
-bool hit_sphere(vec3 &center, double radius, ray r)
+bool hit_sphere(vec3 center, double radius, ray r)
 {
+    double a = dot(r.dir(), r.dir());
+    double b = dot(-2*r.dir(), center - r.orig());
+    double c = dot(center - r.orig(), center - r.orig()) - (radius * radius);
 
+    double determinant = b*b - 4*a*c;
+
+    return determinant >= 0;
 }
 
 
