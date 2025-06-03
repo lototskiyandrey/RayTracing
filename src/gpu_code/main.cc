@@ -5,7 +5,7 @@
 
 void write_color(std::ostream &out, std::vector<double> spectrum);
 
-void generate_spectrum(std::vector<double> &spectrum, const ray r);
+void generate_spectrum_background(std::vector<double> &spectrum, const ray r);
 
 int main() 
 {   
@@ -47,7 +47,7 @@ int main()
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
 
-            generate_spectrum(spectrum, r);
+            generate_spectrum_background(spectrum, r);
 
             write_color(std::cout, spectrum);
         }
@@ -69,20 +69,26 @@ a particular wavelength of visible light
 */
 
 
-void generate_spectrum(std::vector<double> &spectrum, const ray r)
+void generate_spectrum_background(std::vector<double> &spectrum, const ray r)
 {
     auto a = r.dir().y();
 
-    // std::cerr << a << std::endl;
-    
-    // generate_spectrum_gaussian(spectrum, ((double)spectrum_length/2 + shortest_wavelength)*a, 5);
-    generate_spectrum_gaussian(spectrum, ((double)spectrum_length/2.7 + shortest_wavelength)*(1+a/3.7), 1);
+    int variance = 50;
 
-    // Flatten Spectrum
-
-    flatten_spectrum(spectrum, 0.5);
+    std::vector<double> f(spectrum_length);
+    std::vector<double> s(spectrum_length);
+    generate_spectrum_gaussian(f, 460, variance);
+    flatten_spectrum(f, 0.5);
+    generate_spectrum_uniform(s, 0, spectrum_length);
+    flatten_spectrum(s, 1.4);
+    superposition_spectrum(spectrum, f, s);
 }
 
+
+bool hit_sphere(vec3 &center, double radius, ray r)
+{
+
+}
 
 
 

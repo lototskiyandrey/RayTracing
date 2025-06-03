@@ -144,4 +144,20 @@ inline void flatten_spectrum(std::vector<double> &spectrum, double factor)
     std::transform(spectrum.begin(), spectrum.end(), spectrum.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, factor));
 }
 
+inline void generate_spectrum_uniform(std::vector<double> &spectrum, int begin, int end)
+{
+    for(int i = begin; i < end; i++)
+    {
+        spectrum[i] = 1.0 / (end - begin);
+    }
+}
+
+inline void superposition_spectrum(std::vector<double> &spectrum, std::vector<double> f, std::vector<double> s)
+{
+    for(int i = 0; i < spectrum.size(); i++)
+    {
+        spectrum[i] = f[i] + s[i];
+    }
+}
+
 #endif
