@@ -10,7 +10,7 @@ class ray
         const vec3 orig() const {return origin;}
         const vec3 dir() const {return direction;}
 
-        vec3 at(double t)
+        vec3 at(double t) const 
         {
             return origin + direction * t;
         }
