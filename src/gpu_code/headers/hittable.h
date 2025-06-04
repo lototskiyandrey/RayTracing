@@ -10,6 +10,14 @@ class hit_record
         vec3 p;
         vec3 normal;
         double t;
+        bool front_face;
+        void set_face_normal(const ray &r, const vec3 &outward_normal)
+        {
+            // Set the hit record normal vector to point outwards
+
+            front_face = dot(r.dir(), outward_normal) < 0;
+            normal = front_face ? outward_normal : -outward_normal;
+        }
 };
 
 class hittable 
@@ -47,11 +55,15 @@ class sphere : public hittable
                 rec.t = negative_root;
                 rec.p = r.at(negative_root);
                 rec.normal = unit_vector(r.at(negative_root) - center);
+                vec3 outward_normal = (rec.p - center) / radius;
+                rec.set_face_normal(r, outward_normal);
+                return true;
             }
             rec.t = positive_root;
             rec.p = r.at(positive_root);
             rec.normal = unit_vector(r.at(positive_root) - center);
-            
+            vec3 outward_normal = (rec.p - center) / radius;
+            rec.set_face_normal(r, outward_normal);
             return true;
         }
     private:
