@@ -29,15 +29,15 @@ class hittable_list : public hittable
             objects.clear();
         }
 
-        bool hit(const ray &r, double ray_tmin, double ray_tmax, hit_record &rec) const override
+        bool hit(const ray &r, interval ray_t, hit_record &rec) const override
         {
             hit_record temp_rec;
             bool hit_anything = false;
-            auto closest = ray_tmax;
+            auto closest = ray_t.max;
 
             for(const auto &object : objects)
             {
-                if(object->hit(r, ray_tmin, closest, temp_rec))
+                if(object->hit(r, interval(ray_t.min, closest), temp_rec))
                 {
                     hit_anything = true;
                     closest = temp_rec.t;

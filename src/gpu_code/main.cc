@@ -2,17 +2,28 @@
 #include "headers/useful_functions.h"
 #include "headers/vec3.h"
 #include "headers/ray.h"
+#include "headers/hittable_list.h"
+#include "headers/hittable.h"
 
 void write_color(std::ostream &out, std::vector<double> spectrum);
 
 void generate_spectrum_background(std::vector<double> &spectrum, const ray r);
-double hit_sphere(vec3 center, double radius, ray r);
+// double hit_sphere(vec3 center, double radius, ray r);
+
+void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum);
 
 int main() 
 {   
     // Image
     int image_width = 700;
     int image_height = 500;
+
+    // World
+
+    hittable_list world;
+
+    world.add(std::make_shared<sphere>(vec3(0,0,-1), 0.5));
+    world.add(std::make_shared<sphere>(vec3(0,-100.5,-1),100));
 
     // Camera
     auto focal_length = 1.0;
@@ -43,22 +54,11 @@ int main()
         std::clog << "\rScanlines remaining: " << image_height - j << ' ' << std::flush;
         for(int i = 0; i < image_width; i++)
         {   
-
             auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
             
-            auto t = hit_sphere(vec3(0,0,-1), 0.5, r);
-
-            if(t > 0.0)
-            {   
-                vec3 normal = unit_vector(r.at(t) - vec3(0,0,-1));
-                generate_spectrum_gaussian(spectrum, 450 * (1.5 - std::fabs(normal.x())/2.0), 30);
-            }
-            else  
-            {
-                generate_spectrum_background(spectrum, r);
-            }
+            spectrum_color(r, world, spectrum);
 
             write_color(std::cout, spectrum);
         }
@@ -79,6 +79,19 @@ a particular wavelength of visible light
 
 */
 
+void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum)
+{
+    hit_record rec;
+    if(world.hit(r, interval(0, infinity), rec))
+    {
+        vec3 normal = rec.normal;
+        generate_spectrum_gaussian(spectrum, 450 * (1.5 - std::fabs(normal.x())/2.0), 30);
+        return;
+    }
+    generate_spectrum_background(spectrum, r);
+    return;
+}
+
 
 void generate_spectrum_background(std::vector<double> &spectrum, const ray r)
 {
@@ -93,24 +106,6 @@ void generate_spectrum_background(std::vector<double> &spectrum, const ray r)
     generate_spectrum_uniform(s, 0, spectrum_length);
     flatten_spectrum(s, 1.4);
     superposition_spectrum(spectrum, f, s);
-}
-
-
-double hit_sphere(vec3 center, double radius, ray r)
-{
-    double a = dot(r.dir(), r.dir());
-    double b = dot(-2*r.dir(), center - r.orig());
-    double c = dot(center - r.orig(), center - r.orig()) - (radius * radius);
-
-    double determinant = b*b - 4*a*c;
-
-    if(determinant <= 0)
-    {
-        return -1.0;
-    }
-
-
-    return (-b - std::sqrt(determinant)) / (2.0*a);
 }
 
 

@@ -3,6 +3,7 @@
 
 #include "vec3.h"
 #include "ray.h"
+#include "interval.h"
 
 class hit_record 
 {
@@ -25,7 +26,7 @@ class hittable
     public:
         virtual ~hittable() = default;
 
-        virtual bool hit(const ray &r, double ray_tmin, double ray_tmax, hit_record &rec) const = 0;
+        virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const = 0;
 };
 
 class sphere : public hittable 
@@ -33,7 +34,7 @@ class sphere : public hittable
     public:
         sphere(vec3 center, double radius) : center(center), radius(std::fmax(0, radius)) {}
 
-        bool hit(const ray &r, double ray_tmin, double ray_tmax, hit_record &rec) const override 
+        bool hit(const ray &r, interval ray_t, hit_record &rec) const override 
         {
             auto descriminant = hit_sphere(r);
             if(descriminant < 0)
@@ -45,10 +46,10 @@ class sphere : public hittable
             double b = dot(-2*r.dir(), center - r.orig());
 
             auto positive_root = (-b + std::sqrt(descriminant)) / (2 * a);
-            if(positive_root < ray_tmin || positive_root > ray_tmax)
+            if(!ray_t.surrounds(positive_root))
             {
                 auto negative_root = (-b - std::sqrt(descriminant)) / (2 * a);
-                if(negative_root < ray_tmin || negative_root > ray_tmax)
+                if(!ray_t.surrounds(negative_root))
                 {
                     return false;
                 }
@@ -75,14 +76,14 @@ class sphere : public hittable
             double a = dot(r.dir(), r.dir());
             double b = dot(-2*r.dir(), center - r.orig());
             double c = dot(center - r.orig(), center - r.orig()) - (radius * radius);
-            double descriminant = b*b - 4*a*c;
+            double discriminant = b*b - 4*a*c;
 
-            if(descriminant < 0)
+            if(discriminant < 0)
             {
                 return -1.0;
             }
 
-            return descriminant;
+            return discriminant;
         }
 };
 
