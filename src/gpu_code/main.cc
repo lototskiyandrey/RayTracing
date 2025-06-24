@@ -8,7 +8,11 @@
 void write_color(std::ostream &out, std::vector<double> spectrum);
 
 void generate_spectrum_background(std::vector<double> &spectrum, const ray r);
+void generate_black_background(std::vector<double> &spectrum);
 // double hit_sphere(vec3 center, double radius, ray r);
+std::vector<double> sum_two_vectors(std::vector<double> vec1, std::vector<double> vec2);
+vec3 sample_square();
+ray get_ray(int i, int j);
 
 void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum);
 
@@ -49,16 +53,27 @@ int main()
 
     std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
+    int samples_per_pixel = 50;
+
     for(int j = 0; j < image_height; j++)
     {
         std::clog << "\rScanlines remaining: " << image_height - j << ' ' << std::flush;
         for(int i = 0; i < image_width; i++)
         {   
-            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-            auto ray_direction = pixel_center - camera_center;
-            ray r(camera_center, ray_direction);
+
+            std::vector<double> temp_spectrum(spectrum_length);
+            for(int sample = 0; sample < samples_per_pixel; sample++)
+            {
+                auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
+                auto ray_direction = pixel_center - camera_center;
+                ray r = get_ray(i,j);
             
-            spectrum_color(r, world, spectrum);
+                spectrum_color(r, world, temp_spectrum);
+
+                spectrum = sum_two_vectors(temp_spectrum, spectrum);
+            }
+            
+            flatten_spectrum(spectrum, 1.0 / samples_per_pixel);
 
             write_color(std::cout, spectrum);
         }
@@ -71,6 +86,52 @@ int main()
 
     return 0;
 }
+
+ray get_ray(int i, int j) 
+{   
+    auto center = vec3(0,0,0);
+
+    // Camera
+    int image_width = 700;
+    int image_height = 500;
+    auto focal_length = 1.0;
+    auto viewport_height = 2.0;
+    auto viewport_width = viewport_height * (double(image_width)/image_height);
+    auto camera_center = vec3(0, 0, 0);
+
+    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    auto viewport_u = vec3(viewport_width, 0, 0);
+    auto viewport_v = vec3(0, -viewport_height, 0);
+
+    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    auto pixel_delta_u = viewport_u / image_width;
+    auto pixel_delta_v = viewport_v / image_height;
+
+    // Calculate the location of the upper left pixel.
+    auto viewport_upper_left = camera_center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+    auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+    auto offset = sample_square();
+    auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
+
+        auto ray_origin = center;
+        auto ray_direction = pixel_sample - ray_origin;
+
+        return ray(ray_origin, ray_direction);
+}
+
+vec3 sample_square() 
+{
+    return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+}
+
+void generate_light_sphere(vec3 center, double radius, double temperature, double light_intensity)
+{
+
+}
+
+
+
 
 /*
 
@@ -88,8 +149,21 @@ void spectrum_color(const ray &r, const hittable &world, std::vector<double> &sp
         generate_spectrum_gaussian(spectrum, 450 * (1.5 - std::fabs(normal.x())/2.0), 30);
         return;
     }
-    generate_spectrum_background(spectrum, r);
+    // generate_spectrum_background(spectrum, r);
+    generate_black_background(spectrum);
     return;
+}
+
+std::vector<double> sum_two_vectors(std::vector<double> vec1, std::vector<double> vec2)
+{
+    std::vector<double> vec_result(spectrum_length);
+
+    for(int i = 0; i < vec_result.size(); i++)
+    {
+        vec_result[i] = vec1[i] + vec2[i];
+    }
+
+    return vec_result;
 }
 
 
@@ -107,6 +181,14 @@ void generate_spectrum_background(std::vector<double> &spectrum, const ray r)
     flatten_spectrum(s, 1.4);
     superposition_spectrum(spectrum, f, s);
 }
+
+void generate_black_background(std::vector<double> &spectrum) 
+{
+    for(int i = 0; i < spectrum.size(); i++)
+    {
+        spectrum[i] = 0.0;
+    }
+}  
 
 
 

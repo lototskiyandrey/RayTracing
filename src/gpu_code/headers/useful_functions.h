@@ -141,8 +141,12 @@ inline void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, 
 
 inline void flatten_spectrum(std::vector<double> &spectrum, double factor)
 {
-    std::transform(spectrum.begin(), spectrum.end(), spectrum.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, factor));
+    for(int i = 0; i < spectrum.size(); i++)
+    {
+        spectrum[i] *= factor;
+    }
 }
+
 
 inline void generate_spectrum_uniform(std::vector<double> &spectrum, int begin, int end)
 {
