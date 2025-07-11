@@ -133,18 +133,23 @@ inline double integrate_spectrum_cmf(std::vector<double> spectrum, std::vector<d
 
 inline void generate_spectrum_gaussian(std::vector<double> &spectrum, int mean, int variance)
 {
-    for(int i = 0; i < spectrum.size(); i++)
+    for(int i = 0; i < spectrum_length; i++)
     {
         spectrum.at(i) = gaussian(mean, variance, i+shortest_wavelength);
     }
 }
 
-inline void flatten_spectrum(std::vector<double> &spectrum, double factor)
-{
-    for(int i = 0; i < spectrum.size(); i++)
+inline std::vector<double> multiply_vector_by_constant(std::vector<double> vec1, double factor)
+{   
+
+    std::vector<double> vec_result(spectrum_length);
+
+    for(int i = 0; i < vec1.size(); i++)
     {
-        spectrum[i] *= factor;
+        vec_result[i] = vec1[i] * factor;
     }
+
+    return vec_result;
 }
 
 
@@ -162,6 +167,43 @@ inline void superposition_spectrum(std::vector<double> &spectrum, std::vector<do
     {
         spectrum[i] = f[i] + s[i];
     }
+}
+
+inline std::vector<double> multiply_two_vectors(std::vector<double> vec1, std::vector<double> vec2)
+{
+    std::vector<double> vec_result(spectrum_length);
+
+    for(int i = 0; i < vec_result.size(); i++)
+    {
+        vec_result[i] = vec1[i] * vec2[i];
+    }
+
+    return vec_result;
+}
+
+inline std::vector<double> create_zero_vector(int length)
+{
+    std::vector<double> vec(length);
+
+    for(int i = 0; i < vec.size(); i++)
+    {
+        vec[i] = 0.0;
+    }
+
+    return vec;
+}
+
+inline bool is_zero_vector(std::vector<double> vec)
+{
+    for(int i = 0; i < vec.size(); i++)
+    {
+        if(vec.at(i) != 0.0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 #endif

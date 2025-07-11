@@ -4,6 +4,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "interval.h"
+#include "material.h"
 
 class hit_record 
 {
@@ -12,6 +13,7 @@ class hit_record
         vec3 normal;
         double t;
         bool front_face;
+        material mat;
         void set_face_normal(const ray &r, const vec3 &outward_normal)
         {
             // Set the hit record normal vector to point outwards
@@ -32,7 +34,7 @@ class hittable
 class sphere : public hittable 
 {
     public:
-        sphere(vec3 center, double radius) : center(center), radius(std::fmax(0, radius)) {}
+        sphere(vec3 center, double radius, material mat) : center(center), radius(std::fmax(0, radius)), mat(mat) {}
 
         bool hit(const ray &r, interval ray_t, hit_record &rec) const override 
         {
@@ -65,11 +67,13 @@ class sphere : public hittable
             rec.normal = unit_vector(r.at(positive_root) - center);
             vec3 outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
+            rec.mat = mat;
             return true;
         }
     private:
         vec3 center;
         double radius;
+        material mat;
 
         double hit_sphere(ray r) const
         {

@@ -1,9 +1,11 @@
 #include <bits/stdc++.h>
+#include "headers/interval.h"
 #include "headers/useful_functions.h"
 #include "headers/vec3.h"
 #include "headers/ray.h"
 #include "headers/hittable_list.h"
 #include "headers/hittable.h"
+#include "headers/material.h"
 
 void write_color(std::ostream &out, std::vector<double> spectrum);
 
@@ -14,7 +16,7 @@ std::vector<double> sum_two_vectors(std::vector<double> vec1, std::vector<double
 vec3 sample_square();
 ray get_ray(int i, int j);
 
-void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum);
+void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum, int scatter_depth);
 
 int main() 
 {   
@@ -22,12 +24,23 @@ int main()
     int image_width = 700;
     int image_height = 500;
 
+
+    // Materials
+
+    std::vector<double> white(spectrum_length);
+    std::vector<double> yellow(spectrum_length);
+    generate_spectrum_gaussian(white, 450, 100);
+    generate_spectrum_gaussian(yellow, 575, 20);
+
+    material white_sphere(0.9, white);
+    material yellow_light_sphere(1.5, yellow);
+
     // World
 
     hittable_list world;
 
-    world.add(std::make_shared<sphere>(vec3(0,0,-1), 0.5));
-    world.add(std::make_shared<sphere>(vec3(0,-100.5,-1),100));
+    world.add(std::make_shared<sphere>(vec3(0,0,-1), 0.5, white_sphere));
+    world.add(std::make_shared<sphere>(vec3(0,-100.5,-1),100, yellow_light_sphere));
 
     // Camera
     auto focal_length = 1.0;
@@ -53,7 +66,7 @@ int main()
 
     std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
 
-    int samples_per_pixel = 50;
+    int samples_per_pixel = 100;
 
     for(int j = 0; j < image_height; j++)
     {
@@ -68,12 +81,12 @@ int main()
                 auto ray_direction = pixel_center - camera_center;
                 ray r = get_ray(i,j);
             
-                spectrum_color(r, world, temp_spectrum);
+                spectrum_color(r, world, temp_spectrum, 5);
 
                 spectrum = sum_two_vectors(temp_spectrum, spectrum);
             }
             
-            flatten_spectrum(spectrum, 1.0 / samples_per_pixel);
+            spectrum = multiply_vector_by_constant(spectrum, 1.0 / samples_per_pixel);
 
             write_color(std::cout, spectrum);
         }
@@ -114,22 +127,16 @@ ray get_ray(int i, int j)
     auto offset = sample_square();
     auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u) + ((j + offset.y()) * pixel_delta_v);
 
-        auto ray_origin = center;
-        auto ray_direction = pixel_sample - ray_origin;
+    auto ray_origin = center;
+    auto ray_direction = pixel_sample - ray_origin;
 
-        return ray(ray_origin, ray_direction);
+    return ray(ray_origin, ray_direction);
 }
 
 vec3 sample_square() 
 {
     return vec3(random_double() - 0.5, random_double() - 0.5, 0);
 }
-
-void generate_light_sphere(vec3 center, double radius, double temperature, double light_intensity)
-{
-
-}
-
 
 
 
@@ -139,18 +146,69 @@ Implmenting a more realistic color system. Every ray is now an array where each 
 a particular wavelength of visible light
 
 */
-
-void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum)
+ 
+vec3 unit_random_on_hemisphere(vec3 normal)
 {
-    hit_record rec;
-    if(world.hit(r, interval(0, infinity), rec))
+    vec3 vec = random_unit_vector();
+    while(dot(vec, normal) < 0.0)
     {
-        vec3 normal = rec.normal;
-        generate_spectrum_gaussian(spectrum, 450 * (1.5 - std::fabs(normal.x())/2.0), 30);
-        return;
+        vec = random_unit_vector();
     }
-    // generate_spectrum_background(spectrum, r);
-    generate_black_background(spectrum);
+
+    return vec;
+}
+
+void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum, int scatter_depth)
+{   
+
+    spectrum = create_zero_vector(spectrum_length);
+
+    ray r_copy(r.orig(), r.dir());
+
+    for(int i = 0; i < scatter_depth; i++)
+    {
+       hit_record rec; 
+
+        if(!world.hit(r_copy, interval(0, infinity), rec))
+        {
+            spectrum = create_zero_vector(spectrum_length);
+            break;
+        }
+
+        vec3 normal = rec.normal;
+        double albedo = rec.mat.albedo;
+        std::vector<double> color = rec.mat.color;
+
+        if(is_zero_vector(spectrum))
+        {
+            spectrum = color;
+            spectrum = multiply_vector_by_constant(spectrum, albedo);
+        }
+        else  
+        {
+            color = multiply_vector_by_constant(spectrum, albedo);
+            spectrum = sum_two_vectors(spectrum, color);
+        }
+
+        if(albedo > 1.0)
+        {
+            break;
+        }
+
+        vec3 new_dir = unit_random_on_hemisphere(rec.normal);
+        r_copy = ray(rec.p, new_dir);
+    }
+
+
+    // hit_record rec;
+    // if(world.hit(r, interval(0, infinity), rec))
+    // {
+    //     vec3 normal = rec.normal;
+    //     generate_spectrum_gaussian(spectrum, 450 * (1.5 - std::fabs(normal.x())/2.0), 30);
+    //     return;
+    // }
+    // // generate_spectrum_background(spectrum, r);
+    // generate_black_background(spectrum);
     return;
 }
 
@@ -167,20 +225,8 @@ std::vector<double> sum_two_vectors(std::vector<double> vec1, std::vector<double
 }
 
 
-void generate_spectrum_background(std::vector<double> &spectrum, const ray r)
-{
-    auto a = r.dir().y();
 
-    int variance = 50;
 
-    std::vector<double> f(spectrum_length);
-    std::vector<double> s(spectrum_length);
-    generate_spectrum_gaussian(f, 460, variance);
-    flatten_spectrum(f, 0.5);
-    generate_spectrum_uniform(s, 0, spectrum_length);
-    flatten_spectrum(s, 1.4);
-    superposition_spectrum(spectrum, f, s);
-}
 
 void generate_black_background(std::vector<double> &spectrum) 
 {
