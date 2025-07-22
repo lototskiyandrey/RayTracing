@@ -9,6 +9,13 @@
 
 
 void spectrum_color(const ray &r, const hittable &world, std::vector<double> &spectrum, int scatter_depth);
+vec3 sample_square();
+std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int scatter_depth);
+std::vector<double> multiply_two_vectors(std::vector<double> vec1, std::vector<double> vec2);
+std::vector<double> multiply_vector_by_constant(std::vector<double> vec, double f);
+std::vector<int> convert_hsb_distribution_into_rgb(std::vector<double> hsb_spectrum);
+std::vector<int> sum_two_vectors(std::vector<int> vec1, std::vector<int> vec2);
+std::vector<int> divide_vector_by_constant(std::vector<int> vec, int d);
 
 int main(int argc, char **argv) 
 {
@@ -22,13 +29,24 @@ int main(int argc, char **argv)
         yellow_color.at(i) = 1.0 / (65 - 15);
     }
 
-    material yellow(1.5, yellow_color);
+    material yellow(1.5, yellow_color, false);
 
+    std::vector<double> white_color(hue_length, 0.0);
+
+    for(int i = 0; i < hue_length; i++)
+    {
+        white_color.at(i) = 1.0 / (hue_length);
+    }
+
+    material white(0.9, white_color, false);
+
+    world.add(make_shared<sphere>(vec3(0,0,-1), 0.5, white));
+    world.add(make_shared<sphere>(vec3(0,-100.5,-1), 100, yellow));
 
     int image_width = 700;
     int image_height = 500;
 
-    vec3 center;
+    vec3 center = vec3(0,0,0);
     vec3 pixel00_loc;
     vec3 pixel_delta_u;
     vec3 pixel_delta_v;
@@ -44,13 +62,35 @@ int main(int argc, char **argv)
     auto viewport_upper_left = center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
     pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+    int samples_per_pixel = 50;
+    int scatter_depth = 5;
+
     for(int j = 0; j < image_height; j++)
     {   
         std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
         std::clog << "\rScanline: " << image_height - j << std::flush;
         for(int i = 0; i < image_width; i++)
         {
+            // ray r(center, ray_direction);
 
+            std::vector<int> pixel_color(3, 0);
+
+            for(int sample = 0; sample < samples_per_pixel; sample++)
+            {
+                auto offset = sample_square();
+                auto pixel_sample = pixel00_loc + ((i+offset.x()) * pixel_delta_u) + ((j+offset.y()) * pixel_delta_v);
+                auto ray_direction = pixel_sample - center;
+
+                ray r(center, ray_direction);
+
+                std::vector<int> pixel_color_sample = get_sample_pixel_color(r, world, scatter_depth);
+
+                pixel_color = sum_two_vectors(pixel_color, pixel_color_sample);
+            }
+
+            pixel_color = divide_vector_by_constant(pixel_color, samples_per_pixel);
+
+            std::cout << pixel_color.at(0) << ' ' << pixel_color.at(1) << ' ' << pixel_color.at(2) << "\n";
         }
     }
 
@@ -59,7 +99,7 @@ int main(int argc, char **argv)
 }
 
 
-vector<int> convert_rgb_to_hsb(std::vector<int> rgb)
+std::vector<int> convert_rgb_to_hsb(std::vector<int> rgb)
 {   
     int red = rgb.at(0);
     int green = rgb.at(1);
@@ -111,7 +151,7 @@ vector<int> convert_rgb_to_hsb(std::vector<int> rgb)
     return hsb_color;
 }
 
-vector<int> convert_hsb_to_rgb(vector<int> hsb)
+std::vector<int> convert_hsb_to_rgb(vector<int> hsb)
 {
     // Uses the formula found here: https://www.rapidtables.com/convert/color/hsv-to-rgb.html
     int hue = hsb.at(0);
@@ -168,4 +208,111 @@ vector<int> convert_hsb_to_rgb(vector<int> hsb)
     std::vector<int> rgb = {red, green, blue};
 
     return rgb;
+}
+
+vec3 sample_square() 
+{
+    return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+}
+
+std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int scatter_depth)
+{   
+
+    ray r_copy = ray(r.orig(), r.dir());
+
+    std::vector<double> color_distribution(hue_length, 0.0);
+
+    for(int i = 0; i < scatter_depth; i++)
+    {   
+        hit_record rec;
+        if(!world.hit(r_copy, interval(0, infinity), rec))
+        {
+            return std::vector<int>(3, 0);
+        }
+
+        double albedo = rec.mat.albedo;
+        std::vector<double> color = rec.mat.color;
+        bool is_refractive = rec.mat.is_refractive;
+
+        if(!is_refractive)
+        {
+            if(is_zero_vector(color_distribution))
+            {
+                color_distribution = color;
+                color_distribution = multiply_vector_by_constant(color_distribution, albedo);
+            }
+            else  
+            {   
+                color = multiply_vector_by_constant(color, albedo);
+                color_distribution = multiply_two_vectors(color_distribution, color);
+            }
+
+            if(albedo > 1.0)
+            {
+                break;
+            }
+
+            vec3 direction = random_on_hemisphere(rec.normal);
+            r_copy = ray(rec.p, direction);
+        }
+    }
+
+    // Convert the hue distribution into rgb
+    return convert_hsb_distribution_into_rgb(color_distribution);
+}
+
+std::vector<int> convert_hsb_distribution_into_rgb(std::vector<double> hsb_spectrum)
+{
+    std::vector<int> rgb(3, 0);
+    for(int i = 0; i < hsb_spectrum.size(); i++)
+    {
+        int hue = (int)hsb_spectrum.at(i);
+        int saturation = 100;
+        int brightness = 100;
+        std::vector<int> hsb = {hue, saturation, brightness};
+
+        std::vector<int> rgb_temp = convert_hsb_to_rgb(hsb);
+
+        rgb = sum_two_vectors(rgb, rgb_temp);
+    }
+    return rgb;
+}
+
+std::vector<double> multiply_two_vectors(std::vector<double> vec1, std::vector<double> vec2)
+{
+    // Assumes that the two vectors have the same length.
+    std::vector<double> vec3(vec1.size(), 0.0);
+    for(int i = 0; i < vec1.size(); i++)
+    {
+        vec3.at(i) = vec1.at(i) * vec2.at(i);
+    }
+    return vec3;
+}
+
+std::vector<double> multiply_vector_by_constant(std::vector<double> vec, double f)
+{
+    for(int i = 0; i < vec.size(); i++)
+    {
+        vec.at(i) *= f;
+    }
+    return vec;
+}
+
+std::vector<int> sum_two_vectors(std::vector<int> vec1, std::vector<int> vec2)
+{
+    std::vector<int> vec3(vec1.size(), 0);
+    for(int i = 0; i < vec1.size(); i++)
+    {
+        vec3.at(i) = vec1.at(i) + vec2.at(i);
+    }
+    return vec3;
+}
+
+std::vector<int> divide_vector_by_constant(std::vector<int> vec, int d)
+{
+    for(int i = 0; i < vec.size(); i++)
+    {
+        vec.at(i) /= d;
+    }
+    return vec;
 }

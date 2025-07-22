@@ -58,6 +58,16 @@ inline double clamp(double a, double b, double c)
     return a;
 }
 
-
+inline bool is_zero_vector(std::vector<double> vec)
+{
+    for(int i = 0; i < vec.size(); i++)
+    {
+        if(vec.at(i) != 0.0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 #endif
