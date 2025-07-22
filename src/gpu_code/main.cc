@@ -47,8 +47,11 @@ int main(int argc, char **argv)
 }
 
 
-vector<int> convert_rgb_to_hsb(int red,int green,int blue)
-{
+vector<int> convert_rgb_to_hsb(std::vector<int> rgb)
+{   
+    int red = rgb.at(0);
+    int green = rgb.at(1);
+    int blue = rgb.at(2);
     // Uses the formula found here: https://www.rapidtables.com/convert/color/rgb-to-hsv.html
     double red_prime = (double)red / 255;
     double green_prime = (double)green / 255;
@@ -86,18 +89,71 @@ vector<int> convert_rgb_to_hsb(int red,int green,int blue)
     }
     else  
     {
-        saturation = delta/C_max;
+        saturation = 100 * delta/C_max;
     }
 
-    double brightness = C_max;
+    double brightness = 100 * C_max;
 
     std::vector<int> hsb_color = {(int)hue, (int)saturation, (int)brightness};
 
     return hsb_color;
 }
 
+vector<int> convert_hsb_to_rgb(vector<int> hsb)
+{
+    // Uses the formula found here: https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+    int hue = hsb.at(0);
+    double saturation = (double)hsb.at(1) / 100;
+    double brightness = (double)hsb.at(2) / 100;
 
+    double C = brightness * saturation;
+    double X = C * (1 - std::fabs(((hue / 60) % 2) - 1));
+    double m = brightness - C;
 
+    double red_prime, green_prime, blue_prime;
 
+    if(0 <= hue && hue < 60)
+    {
+        red_prime = C;
+        green_prime = X;
+        blue_prime = 0.0;
+    }
+    else if(60 <= hue && hue < 120)
+    {
+        red_prime = X;
+        green_prime = C;
+        blue_prime = 0.0;
+    }
+    else if(120 <= hue && hue < 180)
+    {
+        red_prime = 0.0;
+        green_prime = C;
+        blue_prime = X;
+    }
+    else if(180 <= hue && hue < 240)
+    {
+        red_prime = 0.0;
+        green_prime = X;
+        blue_prime = C;
+    }
+    else if(240 <= hue && hue < 300)
+    {
+        red_prime = X;
+        green_prime = 0.0;
+        blue_prime = C;
+    }
+    else if(300 <= hue && hue < 360)
+    {
+        red_prime = C;
+        green_prime = 0.0;
+        blue_prime = X;
+    }
 
+    int red = (int)((red_prime+m)*255);
+    int green = (int)((green_prime+m)*255);
+    int blue = (int)((blue_prime+m)*255);
 
+    std::vector<int> rgb = {red, green, blue};
+
+    return rgb;
+}
