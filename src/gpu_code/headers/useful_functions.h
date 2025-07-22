@@ -19,6 +19,7 @@ using std::shared_ptr;
 const double infinity = std::numeric_limits<double>::infinity();
 const double pi = 3.1415926535897932385;
 const double e = 2.7182818284590452353;
+const int hue_length = 360;
 
 // Define Our Spectrum
 
@@ -56,6 +57,7 @@ inline double clamp(double a, double b, double c)
     }
     return a;
 }
+
 
 
 #endif

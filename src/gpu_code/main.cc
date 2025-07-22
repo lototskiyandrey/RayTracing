@@ -13,6 +13,18 @@ void spectrum_color(const ray &r, const hittable &world, std::vector<double> &sp
 int main(int argc, char **argv) 
 {
 
+    hittable_list world;
+
+    std::vector<double> yellow_color(hue_length, 0.0);
+
+    for(int i = 50; i <= 65; i++)
+    {
+        yellow_color.at(i) = 1.0 / (65 - 15);
+    }
+
+    material yellow(1.5, yellow_color);
+
+
     int image_width = 700;
     int image_height = 500;
 

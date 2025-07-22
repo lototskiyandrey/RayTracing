@@ -15,7 +15,7 @@ class material
 
         material(double albedo, std::vector<double> colors) : albedo(albedo)
         {
-            for(int i = 0; i < spectrum_length; i++) 
+            for(int i = 0; i < hue_length; i++) 
             {
                 color.push_back(colors[i]);
             }
