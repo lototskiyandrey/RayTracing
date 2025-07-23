@@ -16,86 +16,96 @@ std::vector<double> multiply_vector_by_constant(std::vector<double> vec, double 
 std::vector<int> convert_hsb_distribution_into_rgb(std::vector<double> hsb_spectrum);
 std::vector<int> sum_two_vectors(std::vector<int> vec1, std::vector<int> vec2);
 std::vector<int> divide_vector_by_constant(std::vector<int> vec, int d);
+std::vector<int> convert_rgb_to_hsb(std::vector<int> rgb);
 
-int main(int argc, char **argv) 
+// int main(int argc, char **argv) 
+// {
+
+//     hittable_list world;
+
+//     std::vector<double> yellow_color(hue_length, 0.0);
+
+//     for(int i = 50; i <= 65; i++)
+//     {
+//         yellow_color.at(i) = 1.0 / (65 - 15);
+//     }
+
+//     material yellow(1.5, yellow_color, false);
+
+//     std::vector<double> white_color(hue_length, 0.0);
+
+//     for(int i = 0; i < hue_length; i++)
+//     {
+//         white_color.at(i) = 1.0 / (hue_length);
+//     }
+
+//     material white(0.9, white_color, false);
+
+//     world.add(make_shared<sphere>(vec3(0,0,-1), 0.5, white));
+//     world.add(make_shared<sphere>(vec3(0,-100.5,-1), 100, yellow));
+
+//     int image_width = 700;
+//     int image_height = 500;
+
+//     vec3 center = vec3(0,0,0);
+//     vec3 pixel00_loc;
+//     vec3 pixel_delta_u;
+//     vec3 pixel_delta_v;
+
+//     auto focal_length = 1.0;
+
+//     auto viewport_u = vec3(image_width, 0, 0);
+//     auto viewport_v = vec3(0, -image_height, 0);
+
+//     pixel_delta_u = viewport_u / image_width;
+//     pixel_delta_v = viewport_v / image_height;
+
+//     auto viewport_upper_left = center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+//     pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+//     int samples_per_pixel = 50;
+//     int scatter_depth = 5;
+
+//     for(int j = 0; j < image_height; j++)
+//     {   
+//         std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+//         std::clog << "\rScanline: " << image_height - j << std::flush;
+//         for(int i = 0; i < image_width; i++)
+//         {
+//             // ray r(center, ray_direction);
+
+//             std::vector<int> pixel_color(3, 0);
+
+//             for(int sample = 0; sample < samples_per_pixel; sample++)
+//             {
+//                 auto offset = sample_square();
+//                 auto pixel_sample = pixel00_loc + ((i+offset.x()) * pixel_delta_u) + ((j+offset.y()) * pixel_delta_v);
+//                 auto ray_direction = pixel_sample - center;
+
+//                 ray r(center, ray_direction);
+
+//                 std::vector<int> pixel_color_sample = get_sample_pixel_color(r, world, scatter_depth);
+
+//                 pixel_color = sum_two_vectors(pixel_color, pixel_color_sample);
+//             }
+
+//             pixel_color = divide_vector_by_constant(pixel_color, samples_per_pixel);
+
+//             std::cout << pixel_color.at(0) << ' ' << pixel_color.at(1) << ' ' << pixel_color.at(2) << "\n";
+//         }
+//     }
+
+
+//     return 0;
+// }
+
+int main(int argc, char **argv)
 {
+    std::vector<int> rgb = {237, 188, 0};
 
-    hittable_list world;
+    std::vector<int> hsb = convert_rgb_to_hsb(rgb);
 
-    std::vector<double> yellow_color(hue_length, 0.0);
-
-    for(int i = 50; i <= 65; i++)
-    {
-        yellow_color.at(i) = 1.0 / (65 - 15);
-    }
-
-    material yellow(1.5, yellow_color, false);
-
-    std::vector<double> white_color(hue_length, 0.0);
-
-    for(int i = 0; i < hue_length; i++)
-    {
-        white_color.at(i) = 1.0 / (hue_length);
-    }
-
-    material white(0.9, white_color, false);
-
-    world.add(make_shared<sphere>(vec3(0,0,-1), 0.5, white));
-    world.add(make_shared<sphere>(vec3(0,-100.5,-1), 100, yellow));
-
-    int image_width = 700;
-    int image_height = 500;
-
-    vec3 center = vec3(0,0,0);
-    vec3 pixel00_loc;
-    vec3 pixel_delta_u;
-    vec3 pixel_delta_v;
-
-    auto focal_length = 1.0;
-
-    auto viewport_u = vec3(image_width, 0, 0);
-    auto viewport_v = vec3(0, -image_height, 0);
-
-    pixel_delta_u = viewport_u / image_width;
-    pixel_delta_v = viewport_v / image_height;
-
-    auto viewport_upper_left = center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
-    pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-
-    int samples_per_pixel = 50;
-    int scatter_depth = 5;
-
-    for(int j = 0; j < image_height; j++)
-    {   
-        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-        std::clog << "\rScanline: " << image_height - j << std::flush;
-        for(int i = 0; i < image_width; i++)
-        {
-            // ray r(center, ray_direction);
-
-            std::vector<int> pixel_color(3, 0);
-
-            for(int sample = 0; sample < samples_per_pixel; sample++)
-            {
-                auto offset = sample_square();
-                auto pixel_sample = pixel00_loc + ((i+offset.x()) * pixel_delta_u) + ((j+offset.y()) * pixel_delta_v);
-                auto ray_direction = pixel_sample - center;
-
-                ray r(center, ray_direction);
-
-                std::vector<int> pixel_color_sample = get_sample_pixel_color(r, world, scatter_depth);
-
-                pixel_color = sum_two_vectors(pixel_color, pixel_color_sample);
-            }
-
-            pixel_color = divide_vector_by_constant(pixel_color, samples_per_pixel);
-
-            std::cout << pixel_color.at(0) << ' ' << pixel_color.at(1) << ' ' << pixel_color.at(2) << "\n";
-        }
-    }
-
-
-    return 0;
+    std::clog << hsb.at(0) << ' ' << hsb.at(1) << ' ' << hsb.at(2) << std::endl;
 }
 
 
@@ -110,19 +120,21 @@ std::vector<int> convert_rgb_to_hsb(std::vector<int> rgb)
     double blue_prime = (double)blue / 255;
 
     double C_max = std::fmax(std::fmax(red_prime, green_prime), blue_prime);
-    double C_min = std::fmax(std::fmin(red_prime, green_prime), blue_prime);
+    double C_min = std::fmin(std::fmin(red_prime, green_prime), blue_prime);
 
     double delta = C_max - C_min;
 
     double hue;
 
-    if(delta == 0)
+    std::clog << "Delta: " << delta << std::endl;
+
+    if(delta == 0.0)
     {
         hue = 0;
     }
     else if(C_max == red_prime) 
     {
-        hue = 60 * ((int)((green_prime-blue_prime)/delta) % 6);
+        hue = 60 * ((int)((green_prime-blue_prime)/delta) % 6 + ( ((green_prime-blue_prime)/delta) - (int)((green_prime-blue_prime)/delta) ));
     }
     else if(C_max == green_prime)
     {
