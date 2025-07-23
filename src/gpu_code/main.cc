@@ -17,6 +17,7 @@ std::vector<int> convert_hsb_distribution_into_rgb(std::vector<double> hsb_spect
 std::vector<int> sum_two_vectors(std::vector<int> vec1, std::vector<int> vec2);
 std::vector<int> divide_vector_by_constant(std::vector<int> vec, int d);
 std::vector<int> convert_rgb_to_hsb(std::vector<int> rgb);
+std::vector<int> convert_hsb_to_rgb(vector<int> hsb);
 
 // int main(int argc, char **argv) 
 // {
@@ -101,11 +102,12 @@ std::vector<int> convert_rgb_to_hsb(std::vector<int> rgb);
 
 int main(int argc, char **argv)
 {
-    std::vector<int> rgb = {237, 188, 0};
-
-    std::vector<int> hsb = convert_rgb_to_hsb(rgb);
-
-    std::clog << hsb.at(0) << ' ' << hsb.at(1) << ' ' << hsb.at(2) << std::endl;
+    // std::vector<int> rgb = {237, 188, 0};
+    // std::vector<int> hsb = convert_rgb_to_hsb(rgb);
+    // std::clog << hsb.at(0) << ' ' << hsb.at(1) << ' ' << hsb.at(2) << std::endl;
+    std::vector<int> hsb = {48, 100, 93};
+    std::vector<int> rgb = convert_hsb_to_rgb(hsb);
+    std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
 }
 
 
@@ -171,7 +173,9 @@ std::vector<int> convert_hsb_to_rgb(vector<int> hsb)
     double brightness = (double)hsb.at(2) / 100;
 
     double C = brightness * saturation;
-    double X = C * (1 - std::fabs(((hue / 60) % 2) - 1));
+    double X = C * (1 - std::fabs(((hue / 60) % 2) - 1 + (((double)hue / 60) - (hue/60)) ));
+    std::clog << X << std::endl;
+    std::clog << C << std::endl;
     double m = brightness - C;
 
     double red_prime, green_prime, blue_prime;
