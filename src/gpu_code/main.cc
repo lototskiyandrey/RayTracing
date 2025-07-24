@@ -24,19 +24,17 @@ int main(int argc, char **argv)
     hittable_list world;
 
     std::vector<double> yellow_color(hue_length, 0.0);
-
     for(int i = 50; i <= 65; i++)
     {
         yellow_color.at(i) = 1.0 / (65 - 15);
     }
 
-    material yellow(1.5, yellow_color, false);
+    material yellow(5.0, yellow_color, false);
 
     std::vector<double> white_color(hue_length, 0.0);
-
     for(int i = 0; i < hue_length; i++)
     {
-        white_color.at(i) = 1.0 / (hue_length);
+        white_color.at(i) = 170.0 / (hue_length);
     }
 
     material white(0.9, white_color, false);
@@ -65,7 +63,7 @@ int main(int argc, char **argv)
     auto viewport_upper_left = center - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
     pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-    int samples_per_pixel = 50;
+    int samples_per_pixel = 100;
     int scatter_depth = 5;
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
@@ -86,19 +84,9 @@ int main(int argc, char **argv)
 
                 ray r(center, ray_direction);
                 
-                hit_record rec;
-                if(world.hit(r, interval(0, infinity), rec))
-                {
-                    std::vector<int> pixel_color_sample = {237, 188, 245};
-                    pixel_color = sum_two_vectors(pixel_color, pixel_color_sample);
-                }
-                else 
-                {
-                    std::vector<int> pixel_color_sample = {0,0,0};
-                    pixel_color = sum_two_vectors(pixel_color, pixel_color_sample);
-                }
+                std::vector<int> pixel_color_sample = get_sample_pixel_color(r, world, scatter_depth);
 
-                // std::vector<int> pixel_color_sample = get_sample_pixel_color(r, world, scatter_depth);
+                pixel_color = sum_two_vectors(pixel_color, pixel_color_sample);
             }
 
             pixel_color = divide_vector_by_constant(pixel_color, samples_per_pixel);
@@ -118,13 +106,26 @@ int main(int argc, char **argv)
 //     // std::vector<int> hsb = {48, 100, 93};
 //     // std::vector<int> rgb = convert_hsb_to_rgb(hsb);
 //     // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
-//     std::vector<int> vec1 = {1, 4, 8};
-//     std::vector<int> vec2 = {9, 8, 11};
-
-//     std::clog << vec1.at(0) << ' ' << vec1.at(1) << ' ' << vec1.at(2) << std::endl;
-//     std::clog << vec2.at(0) << ' ' << vec2.at(1) << ' ' << vec2.at(2) << std::endl;
-//     vec1 = sum_two_vectors(vec1, vec2);
-//     std::clog << vec1.at(0) << ' ' << vec1.at(1) << ' ' << vec1.at(2) << std::endl;
+//     // std::vector<int> vec1 = {1, 4, 8};
+//     // std::vector<int> vec2 = {9, 8, 11};
+//     // std::clog << vec1.at(0) << ' ' << vec1.at(1) << ' ' << vec1.at(2) << std::endl;
+//     // std::clog << vec2.at(0) << ' ' << vec2.at(1) << ' ' << vec2.at(2) << std::endl;
+//     // vec1 = sum_two_vectors(vec1, vec2);
+//     // std::clog << vec1.at(0) << ' ' << vec1.at(1) << ' ' << vec1.at(2) << std::endl;
+//     std::vector<double> yellow_color(hue_length, 0.0);
+//     for(int i = 50; i <= 65; i++)
+//     {
+//         yellow_color.at(i) = 724.0 / (65 - 50);
+//         // std::clog << yellow_color.at(i) << std::endl;
+//     }
+//     // std::vector<double> white_color(hue_length, 0.0);
+//     // for(int i = 0; i < hue_length; i++)
+//     // {
+//     //     white_color.at(i) = 724.0 / (hue_length);
+//     //     // std::clog << white_color.at(i) << std::endl;
+//     // }
+//     std::vector<int> rgb = convert_hsb_distribution_into_rgb(yellow_color);
+//     std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
 // }
 
 
@@ -191,8 +192,8 @@ std::vector<int> convert_hsb_to_rgb(vector<int> hsb)
 
     double C = brightness * saturation;
     double X = C * (1 - std::fabs(((hue / 60) % 2) - 1 + (((double)hue / 60) - (hue/60)) ));
-    std::clog << X << std::endl;
-    std::clog << C << std::endl;
+    // std::clog << X << std::endl;
+    // std::clog << C << std::endl;
     double m = brightness - C;
 
     double red_prime, green_prime, blue_prime;
@@ -277,11 +278,32 @@ std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int
             else  
             {   
                 color = multiply_vector_by_constant(color, albedo);
+                // std::vector<int> rgb = convert_hsb_distribution_into_rgb(color);
+                // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
+                // rgb = convert_hsb_distribution_into_rgb(color_distribution);
+                // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
                 color_distribution = multiply_two_vectors(color_distribution, color);
+                // rgb = convert_hsb_distribution_into_rgb(color_distribution);
+                // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
+                // std::clog << albedo << std::endl;
+                // exit(0);
             }
-
+            // bool should_exit = false;
             if(albedo > 1.0)
             {
+                // std::vector<int> rgb = convert_hsb_distribution_into_rgb(color);
+                // std::clog << std::endl;
+                // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
+                // rgb = convert_hsb_distribution_into_rgb(color_distribution);
+                // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
+                // rgb = convert_hsb_distribution_into_rgb(color_distribution);
+                // std::clog << rgb.at(0) << ' ' << rgb.at(1) << ' ' << rgb.at(2) << std::endl;
+                // std::clog << albedo << std::endl;
+                // std::clog << i << std::endl;
+                // std::clog << r_copy.dir() << ' ' << r_copy.orig() << std::endl;
+                // std::clog << r.dir() << ' ' << r.orig() << std::endl;
+                // exit(0);
+                // should_exit = true;
                 break;
             }
 
@@ -297,17 +319,25 @@ std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int
 std::vector<int> convert_hsb_distribution_into_rgb(std::vector<double> hsb_spectrum)
 {
     std::vector<int> rgb(3, 0);
+    int num_non_zero = 0;
     for(int i = 0; i < hsb_spectrum.size(); i++)
     {
-        int hue = (int)hsb_spectrum.at(i);
+        int hue = i;
         int saturation = 100;
-        int brightness = 100;
+        int brightness = (int)(hsb_spectrum.at(i) * 100);
+
+        num_non_zero = brightness != 0 ? num_non_zero+1 : num_non_zero;
+
         std::vector<int> hsb = {hue, saturation, brightness};
 
         std::vector<int> rgb_temp = convert_hsb_to_rgb(hsb);
 
         rgb = sum_two_vectors(rgb, rgb_temp);
     }
+    // if(num_non_zero > 0)
+    // {
+    //     rgb = divide_vector_by_constant(rgb, num_non_zero);
+    // }
     return rgb;
 }
 
