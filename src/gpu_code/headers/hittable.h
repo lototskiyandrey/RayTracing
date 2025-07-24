@@ -38,57 +38,38 @@ class sphere : public hittable
 
         bool hit(const ray &r, interval ray_t, hit_record &rec) const override 
         {
-            auto descriminant = hit_sphere(r);
-            if(descriminant < 0)
-            {
+            // From https://github.com/RayTracing/raytracing.github.io/blob/release/src/InOneWeekend/sphere.h
+            vec3 oc = center - r.orig();
+            auto a = r.dir().length_squared();
+            auto h = dot(r.dir(), oc);
+            auto c = oc.length_squared() - radius*radius;
+
+            auto discriminant = h*h - a*c;
+            if (discriminant < 0)
                 return false;
-            }
 
-            double a = dot(r.dir(), r.dir());
-            double b = dot(-2*r.dir(), center - r.orig());
+            auto sqrtd = std::sqrt(discriminant);
 
-            auto positive_root = (-b + std::sqrt(descriminant)) / (2 * a);
-            if(!ray_t.surrounds(positive_root))
-            {
-                auto negative_root = (-b - std::sqrt(descriminant)) / (2 * a);
-                if(!ray_t.surrounds(negative_root))
-                {
+            // Find the nearest root that lies in the acceptable range.
+            auto root = (h - sqrtd) / a;
+            if (!ray_t.surrounds(root)) {
+                root = (h + sqrtd) / a;
+                if (!ray_t.surrounds(root))
                     return false;
-                }
-                rec.t = negative_root;
-                rec.p = r.at(negative_root);
-                rec.normal = unit_vector(r.at(negative_root) - center);
-                vec3 outward_normal = (rec.p - center) / radius;
-                rec.set_face_normal(r, outward_normal);
-                return true;
             }
-            rec.t = positive_root;
-            rec.p = r.at(positive_root);
-            rec.normal = unit_vector(r.at(positive_root) - center);
+
+            rec.t = root;
+            rec.p = r.at(rec.t);
             vec3 outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
             rec.mat = mat;
+
             return true;
         }
     private:
         vec3 center;
         double radius;
         material mat;
-
-        double hit_sphere(ray r) const
-        {
-            double a = dot(r.dir(), r.dir());
-            double b = dot(-2*r.dir(), center - r.orig());
-            double c = dot(center - r.orig(), center - r.orig()) - (radius * radius);
-            double discriminant = b*b - 4*a*c;
-
-            if(discriminant < 0)
-            {
-                return -1.0;
-            }
-
-            return discriminant;
-        }
 };
 
 #endif
