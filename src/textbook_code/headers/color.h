@@ -29,6 +29,7 @@ void write_color(std::ostream &out, const color &pixel_color)
     {
         r = 0.0;
     }
+    // hello
 
     if(g != g)
     {
