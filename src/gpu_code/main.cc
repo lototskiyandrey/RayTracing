@@ -29,18 +29,18 @@ int main(int argc, char **argv)
         yellow_color.at(i) = 1.0 / (65 - 15);
     }
 
-    material yellow(5.0, yellow_color, false);
+    material yellow(0.9, yellow_color, false);
 
     std::vector<double> white_color(hue_length, 0.0);
     for(int i = 0; i < hue_length; i++)
     {
-        white_color.at(i) = 170.0 / (hue_length);
+        white_color.at(i) = 10.0 / (hue_length);
     }
 
-    material white(0.9, white_color, false);
+    material white(7.0, white_color, false);
 
-    world.add(make_shared<sphere>(vec3(0,0,-1), 0.5, white));
-    world.add(make_shared<sphere>(vec3(0,-100.5,-1), 100, yellow));
+    world.add(make_shared<sphere>(vec3(0,0,-1), 0.5, yellow));
+    world.add(make_shared<sphere>(vec3(0,-100.5,-1), 100, white));
 
     int image_width = 700;
     int image_height = 500;
@@ -273,7 +273,7 @@ std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int
             if(is_zero_vector(color_distribution))
             {
                 color_distribution = color;
-                color_distribution = multiply_vector_by_constant(color_distribution, albedo);
+                color_distribution = multiply_vector_by_constant(color_distribution, albedo);  
             }
             else  
             {   
@@ -289,7 +289,7 @@ std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int
                 // exit(0);
             }
             // bool should_exit = false;
-            if(albedo > 1.0)
+            if(albedo >= 1.0)
             {
                 // std::vector<int> rgb = convert_hsb_distribution_into_rgb(color);
                 // std::clog << std::endl;
@@ -304,6 +304,10 @@ std::vector<int> get_sample_pixel_color(const ray &r, const hittable &world, int
                 // std::clog << r.dir() << ' ' << r.orig() << std::endl;
                 // exit(0);
                 // should_exit = true;
+                // if(i == 0)
+                // {
+                //     color_distribution = multiply_vector_by_constant(color_distribution, 1.0/100.0);
+                // }
                 break;
             }
 
